@@ -1,4 +1,4 @@
-# iteration-3
+
 import streamlit as st
 
 # third-party imports 
@@ -13,7 +13,7 @@ Now, to store the files we'll store in the dictionary as follows:
     {'role' : assistant , 'content' : 'Hello'}
 """
 
-CONFIG = {'configuration' : {'thread_id' : 'thread-1'}}
+CONFIG = {'configurable' : {'thread_id' : 'thread-1'}}
 
 """ 
 Problem:
@@ -46,7 +46,17 @@ if user_input:
         
         
     response_state = workflow.invoke({"messages": [HumanMessage(content=user_input)]},config=CONFIG)
-    assistant_response = response_state["messages"][-1].content
+    raw_content = response_state["messages"][-1].content
+    
+    assistant_response = ""
+    # handle different content formats from the LLM 
+    if isinstance(raw_content, str):
+        assistant_response = raw_content
+    elif isinstance(raw_content,list) and len(raw_content) > 0:
+        # extract the "text" field from the first block 
+        assistant_response = raw_content[0].get("text","")
+    else:
+        assistant_response = ""
     
     # with a call to your LangGraph agent.
     # assistant_response = "Hello! How can I assist you today?"

@@ -7,7 +7,7 @@ from langgraph.graph import StateGraph, START, END
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph.message import add_messages 
-from langgraph.checkpoint.in_memory import InMemorySaver
+from langgraph.checkpoint.memory import InMemorySaver
 
 # load the env variables 
 load_dotenv()
