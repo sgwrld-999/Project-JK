@@ -1,8 +1,7 @@
-
 import streamlit as st
 
 # third-party imports 
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessageChunk
 
 # custom imports 
 from backend import workflow
@@ -39,27 +38,35 @@ user_input = st.chat_input("You: ")
 
 if user_input:
     
-    # now we are storing the message in the dictionary before displaying it
+    # store the user message
     st.session_state.message_history.append({'role': 'user', 'content': user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
         
-        
-    response_state = workflow.invoke({"messages": [HumanMessage(content=user_input)]},config=CONFIG)
-    raw_content = response_state["messages"][-1].content
-    
-    assistant_response = ""
-    # handle different content formats from the LLM 
-    if isinstance(raw_content, str):
-        assistant_response = raw_content
-    elif isinstance(raw_content,list) and len(raw_content) > 0:
-        # extract the "text" field from the first block 
-        assistant_response = raw_content[0].get("text","")
-    else:
-        assistant_response = ""
-    
-    # with a call to your LangGraph agent.
-    # assistant_response = "Hello! How can I assist you today?"
-    st.session_state.message_history.append({'role': 'assistant', 'content': assistant_response})
     with st.chat_message("assistant"):
-        st.markdown(assistant_response)
+        message_placeholder = st.empty()
+        full_response = ""
+        
+        # stream the response chunk by chunk using stream_mode="messages"
+        for chunk, metadata in workflow.stream(
+            {"messages": [HumanMessage(content=user_input)]}, 
+            config=CONFIG,
+            stream_mode="messages"
+        ):
+            if isinstance(chunk, AIMessageChunk):
+                content = chunk.content
+                
+                # Check if content is a list (common with Gemini)
+                if isinstance(content, list):
+                    # Extract text from each block in the list
+                    for block in content:
+                        if isinstance(block, dict) and "text" in block:
+                            full_response += block["text"]
+                        elif isinstance(block, str):
+                            full_response += block
+                # Check if content is a simple string
+                elif isinstance(content, str):
+                    full_response += content
+                
+                # update the placeholder with the text so far + a cursor
+                message_placeholder.markdown(full_response + "▌")

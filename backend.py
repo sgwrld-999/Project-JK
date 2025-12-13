@@ -26,7 +26,7 @@ class ChatState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages,"The list of messages exchanged in the chat."]
     
 
-llm_model = ChatGoogleGenerativeAI(model="gemini-3-pro-preview")
+llm_model = ChatGoogleGenerativeAI(model="gemini-3-pro-preview", streaming=True)
 
 # chat_nodes function
 def chat_nodes(state: ChatState) -> ChatState:
